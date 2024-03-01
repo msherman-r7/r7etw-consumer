@@ -1,13 +1,34 @@
 #include <Windows.h>
 #include <stdio.h>
+#include <tdh.h>
 
 #include "consumer.h"
 
 static unsigned int g_count = 0;
+DWORD const TRACE_EVENT_INFO_BUFSIZE = 1024 * 1024 * 16;
+BYTE g_buffer[TRACE_EVENT_INFO_BUFSIZE];
+TRACE_EVENT_INFO* g_ptrace_event_info = (TRACE_EVENT_INFO*)g_buffer;
 
 static void event_record_callback(PEVENT_RECORD EventRecord) {
 	wprintf(L"%ld: count = %d\n", GetCurrentThreadId(), g_count);
 	g_count++;
+
+	memset(g_ptrace_event_info, 0xcd, TRACE_EVENT_INFO_BUFSIZE);
+	DWORD cb = TRACE_EVENT_INFO_BUFSIZE;
+	TDHSTATUS status = TdhGetEventInformation(EventRecord, 0, NULL, g_ptrace_event_info, &cb);
+	if (ERROR_SUCCESS != status) {
+		wprintf(L"%ld: TdhGetEventInformation failed: status = %ld, cb = %ld\n", GetCurrentThreadId(), status, cb);
+		return;
+	} else {
+		wprintf(L"%ld: TdhGetEventInformation succeeded\n", GetCurrentThreadId());
+		wchar_t const* providerName = L"None";
+		if (g_ptrace_event_info->ProviderNameOffset) {
+			BYTE* pb = (BYTE*)g_ptrace_event_info;
+			pb = pb + g_ptrace_event_info->ProviderNameOffset;
+			providerName = (wchar_t const*)pb;
+		}
+		wprintf(L"\tProvider Name = %s\n", providerName);
+	}
 }
 
 int wmain(int argc, wchar_t* argv[]) {
