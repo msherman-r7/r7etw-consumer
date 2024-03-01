@@ -9,6 +9,16 @@ DWORD const TRACE_EVENT_INFO_BUFSIZE = 1024 * 1024 * 16;
 BYTE g_buffer[TRACE_EVENT_INFO_BUFSIZE];
 TRACE_EVENT_INFO* g_ptrace_event_info = (TRACE_EVENT_INFO*)g_buffer;
 
+static void display_string_at_offset(TRACE_EVENT_INFO* ptei, ULONG offset, wchar_t const* prefix) {
+	wchar_t const* value = L"None";
+	if (offset) {
+		BYTE* pb = (BYTE*)ptei;
+		pb = pb + offset;
+		value = (wchar_t const*)pb;
+	}
+	wprintf(L"\t%s = %s\n", prefix, value);
+}
+
 static void event_record_callback(PEVENT_RECORD EventRecord) {
 	wprintf(L"%ld: count = %d\n", GetCurrentThreadId(), g_count);
 	g_count++;
@@ -22,21 +32,10 @@ static void event_record_callback(PEVENT_RECORD EventRecord) {
 	} else {
 		wprintf(L"%ld: TdhGetEventInformation succeeded\n", GetCurrentThreadId());
 		wprintf(L"%ld: \tDecoding Source = %ld\n", GetCurrentThreadId(), g_ptrace_event_info->DecodingSource);
-		wchar_t const* providerName = L"None";
-		if (g_ptrace_event_info->ProviderNameOffset) {
-			BYTE* pb = (BYTE*)g_ptrace_event_info;
-			pb = pb + g_ptrace_event_info->ProviderNameOffset;
-			providerName = (wchar_t const*)pb;
-		}
-		wprintf(L"\tProvider Name = %s\n", providerName);
-
-		wchar_t const* taskName = L"None";
-		if (g_ptrace_event_info->TaskNameOffset) {
-			BYTE* pb = (BYTE*)g_ptrace_event_info;
-			pb = pb + g_ptrace_event_info->TaskNameOffset;
-			taskName = (wchar_t const*)pb;
-		}
-		wprintf(L"\tTask Name = %s\n", taskName);
+		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->ProviderNameOffset, L"Provider Name");
+		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->TaskNameOffset, L"Task Name");
+		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->OpcodeNameOffset, L"Opcode Name");
+		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->EventMessageOffset, L"Event Message");
 	}
 }
 
