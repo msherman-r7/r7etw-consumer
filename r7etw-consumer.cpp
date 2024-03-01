@@ -21,6 +21,7 @@ static void event_record_callback(PEVENT_RECORD EventRecord) {
 		return;
 	} else {
 		wprintf(L"%ld: TdhGetEventInformation succeeded\n", GetCurrentThreadId());
+		wprintf(L"%ld: \tDecoding Source = %ld\n", GetCurrentThreadId(), g_ptrace_event_info->DecodingSource);
 		wchar_t const* providerName = L"None";
 		if (g_ptrace_event_info->ProviderNameOffset) {
 			BYTE* pb = (BYTE*)g_ptrace_event_info;
@@ -28,6 +29,14 @@ static void event_record_callback(PEVENT_RECORD EventRecord) {
 			providerName = (wchar_t const*)pb;
 		}
 		wprintf(L"\tProvider Name = %s\n", providerName);
+
+		wchar_t const* taskName = L"None";
+		if (g_ptrace_event_info->TaskNameOffset) {
+			BYTE* pb = (BYTE*)g_ptrace_event_info;
+			pb = pb + g_ptrace_event_info->TaskNameOffset;
+			taskName = (wchar_t const*)pb;
+		}
+		wprintf(L"\tTask Name = %s\n", taskName);
 	}
 }
 
