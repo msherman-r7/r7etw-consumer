@@ -16,7 +16,7 @@ static void display_string_at_offset(TRACE_EVENT_INFO* ptei, ULONG offset, wchar
 		pb = pb + offset;
 		value = (wchar_t const*)pb;
 	}
-	wprintf(L"\t%s = %s\n", prefix, value);
+	wprintf(L"%ld:\t\t%s = %s\n", GetCurrentThreadId(), prefix, value);
 }
 
 static void event_record_callback(PEVENT_RECORD EventRecord) {
@@ -31,11 +31,13 @@ static void event_record_callback(PEVENT_RECORD EventRecord) {
 		return;
 	} else {
 		wprintf(L"%ld: TdhGetEventInformation succeeded\n", GetCurrentThreadId());
-		wprintf(L"%ld: \tDecoding Source = %ld\n", GetCurrentThreadId(), g_ptrace_event_info->DecodingSource);
+		wprintf(L"%ld:\t\tDecoding Source = %ld\n", GetCurrentThreadId(), g_ptrace_event_info->DecodingSource);
 		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->ProviderNameOffset, L"Provider Name");
 		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->TaskNameOffset, L"Task Name");
 		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->OpcodeNameOffset, L"Opcode Name");
 		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->EventMessageOffset, L"Event Message");
+		display_string_at_offset(g_ptrace_event_info, g_ptrace_event_info->ProviderMessageOffset, L"Provider Message");
+		wprintf(L"%ld:\t\tTop Level Property Count = %ld\n", GetCurrentThreadId(), g_ptrace_event_info->TopLevelPropertyCount);
 	}
 }
 
